@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Room Details</title>
+    <style>
+      /* Reset and Base Styling */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f6f9;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      /* Container */
+      .container {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 15px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 1.8em;
+        margin-bottom: 20px;
+      }
+
+      h2 {
+        font-size: 1.4em;
+        margin-bottom: 10px;
+        color: #4a90e2;
+      }
+
+      /* Section Styling */
+      .room-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+      }
+
+      .checklist-section {
+        margin: 20px 0;
+        padding: 15px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+
+      label {
+        font-weight: bold;
+        margin-top: 15px;
+        display: block;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1em;
+      }
+
+      textarea {
+        min-height: 100px;
+      }
+
+      .error {
+        color: red;
+        font-size: 0.9em;
+        display: none;
+      }
+
+      /* Button Styling */
+      button[type="submit"] {
+        width: 100%;
+        padding: 10px;
+        margin-top: 20px;
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      button[type="submit"]:hover {
+        background-color: #357ab8;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 1.5em;
+        }
+        h2 {
+          font-size: 1.2em;
+        }
+        button[type="submit"] {
+          font-size: 0.9em;
+        }
+      }
+
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 1.4em;
+        }
+        h2 {
+          font-size: 1.1em;
+        }
+        .container {
+          padding: 10px;
+        }
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea,
+        button[type="submit"] {
+          font-size: 0.9em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Enter Room Details for {{ cleaner_name }}</h1>
+      <form
+        action="/process_room_checklist"
+        method="POST"
+        onsubmit="return validateForm()"
+      >
+        <input type="hidden" name="cleaner_name" value="{{ cleaner_name }}" />
+        <input
+          type="hidden"
+          name="max_room_number"
+          value="{{ max_room_number }}"
+        />
+
+        {% for i in range(1, max_room_number + 1) %}
+        <div class="room-section">
+          <h2>Room {{ i }}</h2>
+          <label for="room_number_{{ i }}">Room Number:</label>
+          <input type="text" name="room_number_{{ i }}" required /><br /><br />
+
+          <label for="room_size_{{ i }}">Room Size:</label>
+          <select
+            name="room_size_{{ i }}"
+            onchange="showChecklist(this, {{ i }})"
+            required
+          >
+            <option value="big">Big</option>
+            <option value="small">Small</option></select
+          ><br /><br />
+
+          <!-- Dusting Tasks -->
+          <div class="checklist-section">
+            <h3>Dusting Tasks</h3>
+            {% for task in dusting_checklist %}
+            <label>
+              <input
+                type="checkbox"
+                name="dusting_{{ i }}_{{ task }}"
+                value="done"
+              />
+              {{ task }} </label
+            ><br />
+            {% endfor %}
+          </div>
+
+          <!-- Arrangement Tasks -->
+          <div class="checklist-section">
+            <h3>Arrangement Tasks</h3>
+            {% for task in arrangement_checklist %}
+            <label>
+              <input
+                type="checkbox"
+                name="arrangement_{{ i }}_{{ task }}"
+                value="done"
+              />
+              {{ task }} </label
+            ><br />
+            {% endfor %}
+          </div>
+
+          <!-- Room-Specific Checklist -->
+          <div class="checklist-section">
+            <h3>Room-Specific Checklist</h3>
+            <div id="big_room_{{ i }}">
+              {% for task, quantity in big_room_checklist %}
+              <div>
+                <label>{{ task }} (Required: {{ quantity }})</label>
+                <input
+                  type="number"
+                  name="quantity_{{ i }}_{{ task }}"
+                  min="0"
+                  max="{{ quantity }}"
+                  value="0"
+                  data-required="{{ quantity }}"
+                  onchange="validateQuantity(this, {{ quantity }})"
+                />
+                <span class="error" id="error_{{ i }}_{{ task }}"></span>
+              </div>
+              {% endfor %}
+            </div>
+            <div id="small_room_{{ i }}" style="display: none">
+              {% for task, quantity in small_room_checklist %}
+              <div>
+                <label>{{ task }} (Required: {{ quantity }})</label>
+                <input
+                  type="number"
+                  name="quantity_{{ i }}_{{ task }}"
+                  min="0"
+                  max="{{ quantity }}"
+                  value="0"
+                  data-required="{{ quantity }}"
+                  onchange="validateQuantity(this, {{ quantity }})"
+                />
+                <span class="error" id="error_{{ i }}_{{ task }}"></span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Additional Notes -->
+          <div class="checklist-section">
+            <h3>Additional Notes (Optional)</h3>
+            <textarea
+              name="additional_notes_{{ i }}"
+              placeholder="Enter any additional notes or missing items not covered in the checklist..."
+            ></textarea>
+          </div>
+        </div>
+        {% endfor %}
+
+        <button type="submit">Submit Checklist</button>
+      </form>
+    </div>
+
+    <script>
+      function showChecklist(selectElement, roomIndex) {
+        const bigRoomDiv = document.getElementById(`big_room_${roomIndex}`);
+        const smallRoomDiv = document.getElementById(`small_room_${roomIndex}`);
+
+        if (selectElement.value === "big") {
+          bigRoomDiv.style.display = "block";
+          smallRoomDiv.style.display = "none";
+        } else if (selectElement.value === "small") {
+          bigRoomDiv.style.display = "none";
+          smallRoomDiv.style.display = "block";
+        }
+      }
+
+      function validateQuantity(input, maxQuantity) {
+        const errorSpan = input.nextElementSibling;
+        const value = parseInt(input.value);
+
+        if (value > maxQuantity) {
+          errorSpan.textContent = `Maximum allowed quantity is ${maxQuantity}`;
+          errorSpan.style.display = "block";
+          input.value = maxQuantity;
+        } else {
+          errorSpan.style.display = "none";
+        }
+      }
+
+      function validateForm() {
+        // Add custom form validation logic here
+        return true;
+      }
+    </script>
+  </body>
+</html>

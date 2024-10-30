@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cleaning Summary</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        margin: 0;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+        padding: 0;
+      }
+
+      .room-summary {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #fdfdfd;
+      }
+
+      .notes {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-left: 3px solid #666;
+        border-radius: 3px;
+        font-size: 0.95em;
+      }
+
+      .success-message {
+        color: green;
+        padding: 15px;
+        background-color: #f0fff0;
+        border-radius: 5px;
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      .pending-tasks {
+        color: #dc3545;
+        font-weight: bold;
+      }
+
+      .action-button {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        text-align: center;
+      }
+
+      .action-button:hover {
+        background-color: #0056b3;
+      }
+
+      ul {
+        padding-left: 20px;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 10px;
+        }
+
+        .room-summary {
+          padding: 10px;
+          margin: 15px 0;
+        }
+
+        .success-message {
+          padding: 10px;
+          font-size: 1em;
+        }
+
+        .notes {
+          font-size: 0.9em;
+        }
+
+        .action-button {
+          padding: 8px 15px;
+          font-size: 0.9em;
+        }
+      }
+
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 1.5em;
+        }
+
+        h2 {
+          font-size: 1.2em;
+        }
+
+        .success-message {
+          font-size: 0.9em;
+        }
+
+        .action-button {
+          padding: 6px 10px;
+          font-size: 0.8em;
+          display: block;
+          width: 100%;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Cleaning Checklist Summary for {{ cleaner_name }}</h1>
+
+    {% if not has_issues %}
+    <div class="success-message">
+      <h2>✓ All tasks completed successfully!</h2>
+      <p>All cleaning tasks have been completed and quantities are correct.</p>
+    </div>
+    {% else %} {% if unchecked_tasks_per_room %} {% for room_number, tasks in
+    unchecked_tasks_per_room.items() %}
+    <div class="room-summary">
+      <h2>Room {{ room_number }}</h2>
+
+      {% if tasks %}
+      <h3 class="pending-tasks">Pending Tasks:</h3>
+      <ul>
+        {% for task in tasks %}
+        <li>{{ task }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %} {% if room_number in additional_notes_per_room %}
+      <h3>Additional Notes:</h3>
+      <div class="notes">{{ additional_notes_per_room[room_number] }}</div>
+      {% endif %}
+    </div>
+    {% endfor %} {% endif %} {% for room_number, notes in
+    additional_notes_per_room.items() %} {% if room_number not in
+    unchecked_tasks_per_room %}
+    <div class="room-summary">
+      <h2>Room {{ room_number }}</h2>
+      <h3>Additional Notes:</h3>
+      <div class="notes">{{ notes }}</div>
+    </div>
+    {% endif %} {% endfor %} {% endif %}
+
+    <a href="/" class="action-button">Start New Checklist</a>
+  </body>
+</html>
